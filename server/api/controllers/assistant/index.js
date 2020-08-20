@@ -22,6 +22,10 @@ exports.handler = async (event, context, callback) => {
 
     var response = await assistant.assist(body.message);
     console.log(response);
-    return new Response({ text: response.text });
+    var text = response.text;
+    if( text.trim() == '' )
+    	text = "サポートしていません。";
+
+    return new Response({ text: text });
   }
 };
