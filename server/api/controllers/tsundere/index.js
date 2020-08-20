@@ -5,8 +5,8 @@ const Response = require(HELPER_BASE + 'response');
 const Redirect = require(HELPER_BASE + 'redirect');
 
 const config = {
-  channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN || 'yƒ`ƒƒƒlƒ‹ƒAƒNƒZƒXƒg[ƒNƒ“z',
-  channelSecret: process.env.LINE_CHANNEL_SECRET || 'yƒ`ƒƒƒlƒ‹ƒV[ƒNƒŒƒbƒgz',
+  channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN || 'ã€ãƒãƒ£ãƒãƒ«ã‚¢ã‚¯ã‚»ã‚¹ãƒˆãƒ¼ã‚¯ãƒ³ã€‘',
+  channelSecret: process.env.LINE_CHANNEL_SECRET || 'ã€ãƒãƒ£ãƒãƒ«ã‚·ãƒ¼ã‚¯ãƒ¬ãƒƒãƒˆã€‘',
 };
 
 const LineUtils = require(HELPER_BASE + 'line-utils');
@@ -29,7 +29,10 @@ const assistant = new GoogleAssistant(CREDENTIALS);
 app.message(async (event, client) =>{
   var response = await assistant.assist(event.message.text);
   console.log(response);
-  var text = tsundere(response.text);
+  var text = response.text;
+  if( text.trim() == '' )
+    	text = "ã‚µãƒãƒ¼ãƒˆã—ã¦ã„ã¾ã›ã‚“ã€‚";
+  var text = tsundere(text);
   console.log(text);
 
   const echo = { type: 'text', text: text };
