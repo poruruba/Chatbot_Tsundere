@@ -11,6 +11,8 @@ const embedded_assistant_pb = grpc.load({
     file: path.relative(PROTO_ROOT_DIR, protoFiles.embeddedAssistant.v1alpha2)
 }).google.assistant.embedded.v1alpha2;
 
+const fs = require('fs');
+
 class GoogleAssistant {
     constructor(credentials) {
         GoogleAssistant.prototype.endpoint_ = "embeddedassistant.googleapis.com";
@@ -31,11 +33,14 @@ class GoogleAssistant {
         return client;
     }
 
-    assist(input) {
+    assist(input, encode) {
         const config = new embedded_assistant_pb.AssistConfig();
         config.setTextQuery(input);
         config.setAudioOutConfig(new embedded_assistant_pb.AudioOutConfig());
-        config.getAudioOutConfig().setEncoding(1);
+        if( encode == undefined )
+	        config.getAudioOutConfig().setEncoding(2); // 1: LINEAR16, 2: MP3
+	    else
+	        config.getAudioOutConfig().setEncoding(encode); // 1: LINEAR16, 2: MP3
         config.getAudioOutConfig().setSampleRateHertz(16000);
         config.getAudioOutConfig().setVolumePercentage(100);
         config.setDialogStateIn(new embedded_assistant_pb.DialogStateIn());
@@ -47,18 +52,35 @@ class GoogleAssistant {
         request.setConfig(config);
 
         delete request.audio_in;
+        
+        var output_buffer;
+        if( encode != undefined )
+	        output_buffer = Buffer.alloc(0);
+        
         const conversation = this.client.assist();
         return new Promise((resolve, reject) => {
             let response = { input: input };
             conversation.on('data', (data) => {
+            	console.log(JSON.stringify(data));
                 if (data.device_action) {
                     response.deviceAction = JSON.parse(data.device_action.device_request_json);
                 } else if (data.dialog_state_out !== null && data.dialog_state_out.supplemental_display_text) {
                     response.text = data.dialog_state_out.supplemental_display_text;
                 }
+                
+                if( data.audio_out && output_buffer ){
+                	console.log(data.audio_out.audio_data);
+                	output_buffer = Buffer.concat([output_buffer, data.audio_out.audio_data]);
+                }
             });
             conversation.on('end', (error) => {
                 // Response ended, resolve with the whole response.
+
+				if( output_buffer ){
+					response.audio = output_buffer.toString('base64');
+					console.log("output_buffer=" + output_buffer.length);
+				}
+
                 resolve(response);
             });
             conversation.on('error', (error) => {
