@@ -20,7 +20,7 @@ exports.handler = async (event, context, callback) => {
   if( event.path == '/assistant-talk'){
     var body = JSON.parse(event.body);
 
-    var response = await assistant.assist(body.message);
+    var response = await assistant.assist(body.message, body.encode);
     console.log(response);
     var text = response.text;
     if( text.trim() == '' )
