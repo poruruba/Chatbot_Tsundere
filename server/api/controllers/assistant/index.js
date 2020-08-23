@@ -26,6 +26,6 @@ exports.handler = async (event, context, callback) => {
     if( text.trim() == '' )
     	text = "サポートしていません。";
 
-    return new Response({ text: text });
+    return new Response({ text: text, audio: response.audio });
   }
 };
